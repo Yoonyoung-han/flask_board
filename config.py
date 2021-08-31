@@ -4,3 +4,7 @@ DATABASE = 'sample_db'
 USER = 'test'
 PASSWORD = 'test1234'
 SECRET_KEY = "dev"
+REDIS_URL = 'redis://127.0.0.1:6379/0'
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379
+REDIS_DB = 0

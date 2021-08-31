@@ -1,13 +1,18 @@
 from flask import Blueprint, url_for, render_template, request, session, g
+from flask.app import Flask
+from flask.wrappers import Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 from pybo.forms import UserCreateForm, UserLoginForm
 from pybo.models.board_models import User
 from pybo.exception import ExceptionError
+from pybo.controller.session_controller import RedisSessionInterface
 import functools
 
+app = Flask(__name__)
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+sessionCtrl = RedisSessionInterface()
 
 
 @bp.route('/signup/', methods=('GET', 'POST'))
@@ -36,15 +41,17 @@ def login():
             raise ExceptionError("존재하지 않는 사용자입니다.")
         elif not check_password_hash(user['password'], form.password.data):
             raise ExceptionError("비밀번호가 올바르지 않습니다.")
-        
-        session.clear()
+
+        session['sid'] = request.cookies.get(app.session_cookie_name)
         session['user_id'] = str(user['_id'])
+        
+        sessionCtrl.save_session(app,session,Response)
         return redirect(url_for('main.index'))
     return render_template('auth/login.html', form=form)
 
 @bp.route('/logout/')
 def logout():
-    session.clear()
+    session.pop('user_id',default=None)
     return redirect(url_for('main.index'))
 
 def login_required(view):
