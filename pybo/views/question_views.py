@@ -14,8 +14,9 @@ bp = Blueprint('question', __name__, url_prefix='/question')
 @bp.route('/list/')
 def _list():
     page = request.args.get('page', type=int, default=1)  # 페이지
-    question_list = Question.objects.order_by('create_date').all()
-    question_list = question_list.paginate(page, per_page=10)
+    question_list = Question.objects.order_by('create_date').all() if Question.objects.order_by('create_date') is not None else None
+    print(question_list)
+    question_list = question_list.paginate(page, per_page=10) if question_list is not None else None
     return render_template('question/question_list.html', question_list=question_list)
 
 

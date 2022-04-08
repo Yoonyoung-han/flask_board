@@ -7,6 +7,7 @@ from redis import ReadOnlyError, Redis
 from werkzeug.datastructures import CallbackDict
 from flask import json
 import pickle
+import os 
 
 SESSION_EXPIRY_MINUTES = 60
 SESSION_COOKIE_NAME = "session"
@@ -52,7 +53,7 @@ class RedisSessionInterface(SessionInterface):
     def save_session(self, app, session, response):
         user_id = session.get('user_id')
         response = response()
-
+        print("save_session",user_id)
         def session_is_modified_empty():
             return not session and session.modified
 
@@ -92,15 +93,15 @@ class RedisSessionInterface(SessionInterface):
     def _redis_key(sid):
         return 'sid:{}'.format(sid)
 
-    # def _write_wrapper(self, write_method, *args):
-    #     print(*args)
-    #     for i in range(2):
-    #         try:
-    #             write_method(*args)
-    #             break
-    #         except ReadOnlyError:
-    #             self.redis.connection_pool.reset()
-    #             time.sleep(1)
+    def _write_wrapper(self, write_method, *args):
+        print(*args)
+        for i in range(2):
+            try:
+                write_method(*args)
+                break
+            except ReadOnlyError:
+                self.redis.connection_pool.reset()
+                time.sleep(1)
 
     def _get_redis_value_and_ttl_of(self, sid):
         redis_key = self._redis_key(sid)
@@ -150,6 +151,6 @@ class RedisSessionInterface(SessionInterface):
         return RedisSession(sid=uuid4().hex, new=True)
 
 def init_app(app):
-    redis = Redis(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
-                  db=app.config['REDIS_DB'])
+    redis = Redis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'),
+                  db=os.environ.get('REDIS_DB'))
     app.session_interface = RedisSessionInterface(redis)
