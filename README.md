@@ -27,3 +27,6 @@ $ sudo service mongod status
 /etc/mongod.conf 에 security 부분 주석처리 후 restart
 
 ```
+# 3. docker-compose 관련 정리
+`1. image 전체 삭제는 sudo docker-compose down -v --rmi all --remove-orphans 로 한다.`  
+`2. 빌드 및 올리는 것은 sudo docker-compose up 한다.`  
