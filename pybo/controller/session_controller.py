@@ -4,6 +4,7 @@ import time
 from uuid import uuid4
 from flask.sessions import SessionInterface, SessionMixin
 from redis import ReadOnlyError, Redis
+from pybo.exception import ExceptionError
 from werkzeug.datastructures import CallbackDict
 from flask import json
 import pickle
@@ -29,6 +30,7 @@ class RedisSession(CallbackDict, SessionMixin):
 class RedisSessionInterface(SessionInterface):
     #init connection
     def __init__(self, redis=None):
+        print(1)
         self.redis = redis or Redis()
 
     def open_session(self,request):
@@ -53,7 +55,6 @@ class RedisSessionInterface(SessionInterface):
     def save_session(self, app, session, response):
         user_id = session.get('user_id')
         response = response()
-        print("save_session",user_id)
         def session_is_modified_empty():
             return not session and session.modified
 
@@ -74,7 +75,8 @@ class RedisSessionInterface(SessionInterface):
 			'user_id': user_id
 		}
         sstr = pickle.dumps(ssd)
-        self.redis.setex(session.sid,expires_in_seconds,sstr)
+        #setex 적용 시 connection error 발생으로 일단 보류
+        # self.redis.setex(name=session.sid,time=expires_in_seconds,value=sstr)
         # self._write_wrapper(self.redis.setex, self._redis_key(session.sid), redis_value, expires_in_seconds)
         response.set_cookie(key =SESSION_COOKIE_NAME, value = session_key, expires=expiry_date,
                             httponly=True)
@@ -151,6 +153,6 @@ class RedisSessionInterface(SessionInterface):
         return RedisSession(sid=uuid4().hex, new=True)
 
 def init_app(app):
-    redis = Redis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'),
-                  db=os.environ.get('REDIS_DB'))
+    redis = Redis(host=os.environ.get('REDIS_HOST'), port=int(os.environ.get('REDIS_PORT')),
+                db=int(os.environ.get('REDIS_DB')))
     app.session_interface = RedisSessionInterface(redis)

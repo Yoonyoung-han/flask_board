@@ -1,0 +1,27 @@
+version: "3"
+services:
+  redis:
+    image: redis
+    container_name: "redis"
+    ports:
+      - '6379:6379/tcp'
+    command: redis-server
+  mongodb:
+    image: "mongo"
+    container_name: "mongodb"
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./config.env
+    volumes:
+        - ./mongodb:/data/db
+  web:
+    build: .
+    volumes:
+      - .:/pybo
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./config.env
+    depends_on:
+     - mongodb
