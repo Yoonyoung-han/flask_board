@@ -4,24 +4,23 @@ services:
     image: redis
     container_name: "redis"
     ports:
-      - '6379:6379/tcp'
+      - 6379:${REDIS_PORT}
     command: redis-server
   mongodb:
     image: "mongo"
     container_name: "mongodb"
     ports:
-      - "27017:27017"
-    env_file:
-      - ./config.env
+      - 27017:${MONGODB_PORT}
     volumes:
         - ./mongodb:/data/db
   web:
-    build: .
+    build: 
+      context: .
     volumes:
       - .:/pybo
-    ports:
-      - "5000:5000"
     env_file:
       - ./config.env
+    ports:
+      - "5000:5000"
     depends_on:
      - mongodb
